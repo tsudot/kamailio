@@ -1117,6 +1117,7 @@ static int sip_capture_store(struct _sipcapture_object *sco, str *dtable, _captu
 
 	str tmp;
 	int ii = 0;
+    int pri_key = -1;
 	str *table = NULL;
 	_capture_mode_data_t *c = NULL;
 
@@ -1370,9 +1371,12 @@ static int sip_capture_store(struct _sipcapture_object *sco, str *dtable, _captu
                 	LM_ERR("failed to insert delayed into database\n");
                         goto error;
                 }
-        } else if (c->db_funcs.insert(c->db_con, db_keys, db_vals, NR_KEYS) < 0) {
-		LM_ERR("failed to insert into database\n");
+        } else {
+            pri_key = c->db_funcs.insert(c->db_con, db_keys, db_vals, NR_KEYS)
+            if pri_key < 0 {
+                LM_ERR("failed to insert into database\n");
                 goto error;               
+            }
 	}
 	
 	
@@ -1380,7 +1384,7 @@ static int sip_capture_store(struct _sipcapture_object *sco, str *dtable, _captu
 	update_stat(sco->stat, 1);
 #endif	
 
-	return 1;
+	return pri_key;
 error:
 	return -1;
 }
